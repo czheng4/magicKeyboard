@@ -15,7 +15,6 @@ import socket
 
 
 
-
 class Worker(QObject):
   finished = pyqtSignal()
   progress = pyqtSignal(bytes)
@@ -26,19 +25,29 @@ class Worker(QObject):
     port = 12001
 
     # create the server 
-    serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serv.bind((host, port))
-    serv.listen()
-    conn, addr = serv.accept()
+    # serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # serv.bind((host, port))
+    # serv.listen()
+    # conn, addr = serv.accept()
+
+    
+    done = True
+    while done:
+      try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((host, port))
+        done = False
+      except Exception:
+        pass
 
     # reading events
     while True:
-      data = conn.recv(256)
+      data = client.recv(256)
       if (data == b""): break;
       self.progress.emit(data)
 
     # close the socket
-    conn.close()
+    client.close()
     self.finished.emit()
     
  
@@ -47,21 +56,21 @@ class Worker(QObject):
 class Keyboard:
   def __init__(self):
     self.key_names = [
-      ["esc", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F2", "home"],
-      ["~\n`", "!\n1", "@\n2", "#\n3", "$\n4", "%\n5", "^\n6", "&&\n7", "*\n8", "(\n9", ")\n0", "_\n-", "+\n=", "delete"],
-      ["tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "{\n[", "}\n]", "|\n\\"],
-      ["caps lock", 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ":\n;", "\"\n'", "return"],
-      ["shift", 'Z', 'X', 'C', 'V', 'B', 'N', 'M', "<\n,", ">\n.", "?\n/", "shift"],
-      ["fn", "control", "option", "command", "space", "command", "option", "left", "up", "down", "right"]
+      ['esc', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F2', 'home'],
+      ['~\n`', '!\n1', '@\n2', '#\n3', '$\n4', '%\n5', '^\n6', '&&\n7', '*\n8', '(\n9', ')\n0', '_\n-', '+\n=', 'delete'],
+      ['tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{\n[', '}\n]', '|\n\\'],
+      ['caps lock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':\n;', "\'\n", 'return'],
+      ['shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<\n,', '>\n.', '?\n/', 'shift'],
+      ['fn', 'control', 'option', 'command', 'space', 'command', 'option', 'left', 'up', 'down', 'right']
     ]
 
     self.actual_keys = [ 
-      ["Key.esc", "Key.f1", "Key.f2", "Key.f3", "Key.f4", "Key.f5", "Key.f6", "Key.f7", "Key.f8", "Key.f9", "Key.f10", "Key.f11", "Key.f12", "Key.home"], 
-      ['~', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_', '=', "Key.backspace"],
-      ["Key.tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", '[', ']', '\\'],
-      ["Key.caps_lock", 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ";", "'", "Key.enter"],
-      ["Key.shift", 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ",", ".", "/", "Key.shift_r"],
-      ["fn", "Key.ctrl", "Key.alt", "Key.cmd", "Key.space", "Key.cmd_r", "Key.alt_r", "Key.left", "Key.up", "Key.down", "Key.right"]
+      ['esc', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', 'home'], 
+      ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_', '=', 'backspace'],
+      ['tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
+      ['capslock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'", 'enter'],
+      ['shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'shift_r'],
+      ['fn', 'ctrl', 'alt', 'command', 'space', 'command_r', 'alt_r', 'left', 'up', 'down', 'right']
     ]
 
     self.app = QApplication([])
@@ -96,10 +105,26 @@ class Keyboard:
     i = 0
     while (i < len(s)):
       if s[i] == "PRESS":
+
+        if s[i+1].islower() and len(s[i+1]) == 1: s[i+1] = s[i+1].upper()
+
         self.buttons[s[i+1]].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(170, 170, 170)")
+        
+        if (s[i+1] == "shift"): self.buttons["shift_r"].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(170, 170, 170)")
+        elif (s[i+1] == "command"): self.buttons["command_r"].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(170, 170, 170)")
+        elif (s[i+1] == "alt"): self.buttons["alt_r"].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(170, 170, 170)")
+
         i+=1
       elif s[i] == "RELEASE":
+
+        if s[i+1].islower() and len(s[i+1]) == 1: s[i+1] = s[i+1].upper()
+
         self.buttons[s[i+1]].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(230,230,230)")
+        if (s[i+1] == "shift"): self.buttons["shift_r"].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(230,230,230)")
+        elif (s[i+1] == "command"): self.buttons["command_r"].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(230,230,230)")
+        elif (s[i+1] == "alt"): self.buttons["alt_r"].setStyleSheet("font-size:15px; border-radius: 5px; background-color: rgb(230,230,230)")
+
+
         i+=1
       elif s[i] == "CLICK":
         self.click.setText("Click at: {} {}".format(s[i+1], s[i+2]))
