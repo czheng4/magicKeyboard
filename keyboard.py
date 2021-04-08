@@ -15,14 +15,15 @@ import socket
 
 
 
-host = '127.0.0.1'
-port = 12001
 
 class Worker(QObject):
   finished = pyqtSignal()
   progress = pyqtSignal(bytes)
 
   def run(self):
+
+    host = '127.0.0.1'
+    port = 12001
 
     # create the server 
     serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -180,8 +181,6 @@ class Keyboard:
     self.getUpdate()
 
     self.window.show()
-    
-    print(self.buttons.keys())
     sys.exit(self.app.exec_())
 
 
