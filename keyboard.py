@@ -1,18 +1,20 @@
-import sys
-import time
+'''
+ChaoHui Zheng
+04/08/2021
+'''
+
 from pynput.keyboard import Key, Listener, KeyCode
 from pynput import mouse
-from time import sleep
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QSizePolicy
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
-from PyQt5.QtCore import QMutex, QObject, QThread, pyqtSignal, Qt
+import sys
+import time
 import socket
-
 
 
 # This is a worker getting keyboard and mouse events data from events.py
@@ -78,6 +80,9 @@ class Keyboard:
 
     # keyboard button
     self.buttons = {}
+
+    # try to connect to server to get mouse and keyboard events
+    self.run_worker()
 
 
 
@@ -202,7 +207,6 @@ class Keyboard:
     self.click.resize(400, 20)
     self.click.setStyleSheet("font-size:15px")
     self.click.move(x, y)
-    self.run_worker()
 
     self.window.show()
     sys.exit(self.app.exec_())
