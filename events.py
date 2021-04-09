@@ -6,6 +6,7 @@ import socket
 import time
 import threading
 import os
+import argparse
 
 
 '''
@@ -15,11 +16,11 @@ show what key is being pressed and mouse position.
 '''
 
 class Events:
-  def __init__(self, log_filename = None):
+  def __init__(self, log_filename):
     self.host = '127.0.0.1'      # The server's hostname or IP address
     self.port = 12001            # The port used by the server
     
-    if log_filename != None: self.log = open(log_filename, "w")
+    if log_filename != "": self.log = open(log_filename, "w")
     else: self.log = None
 
     # Create the key map to match to how keyboard.py to store each key board buttons
@@ -143,7 +144,7 @@ class Events:
     serv.listen()
     while True:
       self.client, addr = serv.accept()
-      print("accept the connections")
+      print("accept the connection")
 
     serv.close()
 
@@ -157,15 +158,13 @@ class Events:
     # print("P {} {}".format(key, self.key_map_func(key)))
 
     key = self.key_map_func(key)
-    print(key)
     if key != None and self.is_pressed[key] == False:
       try :
         self.is_pressed[key] = True
         if self.is_pressed['esc'] and self.is_pressed['ctrl']:
           if self.log: self.log.close()
-          self.client = None
-          self.log = None
-          print("Exit", flush= True)
+          if self.client: self.client.close()
+          print("Exit successfully", flush= True)
           os._exit(1)
           return False
 
@@ -248,40 +247,8 @@ class Events:
 
 def execute_log(log_filename):
 
-  a = ['\t', '\n', '\r', ' ', '!', '"', '#', '$', '%', '&', "'", '(',
-      ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7',
-      '8', '9', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`',
-      'a', 'b', 'c', 'd', 'e','f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
-      'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~',
-      'accept', 'add', 'alt', 'altleft', 'altright', 'apps', 'backspace',
-      'browserback', 'browserfavorites', 'browserforward', 'browserhome',
-      'browserrefresh', 'browsersearch', 'browserstop', 'capslock', 'clear',
-      'convert', 'ctrl', 'ctrlleft', 'ctrlright', 'decimal', 'del', 'delete',
-      'divide', 'down', 'end', 'enter', 'esc', 'escape', 'execute', 'f1', 'f10',
-      'f11', 'f12', 'f13', 'f14', 'f15', 'f16', 'f17', 'f18', 'f19', 'f2', 'f20',
-      'f21', 'f22', 'f23', 'f24', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9',
-      'final', 'fn', 'hanguel', 'hangul', 'hanja', 'help', 'home', 'insert', 'junja',
-      'kana', 'kanji', 'launchapp1', 'launchapp2', 'launchmail',
-      'launchmediaselect', 'left', 'modechange', 'multiply', 'nexttrack',
-      'nonconvert', 'num0', 'num1', 'num2', 'num3', 'num4', 'num5', 'num6',
-      'num7', 'num8', 'num9', 'numlock', 'pagedown', 'pageup', 'pause', 'pgdn',
-      'pgup', 'playpause', 'prevtrack', 'print', 'printscreen', 'prntscrn',
-      'prtsc', 'prtscr', 'return', 'right', 'scrolllock', 'select', 'separator',
-      'shift', 'shiftleft', 'shiftright', 'sleep', 'space', 'stop', 'subtract', 'tab',
-      'up', 'volumedown', 'volumemute', 'volumeup', 'win', 'winleft', 'winright', 'yen',
-      'command', 'option', 'optionleft', 'optionright']
-
-
+  # to make sure the listener is ready
   time.sleep(1)
-  # for k in a:
-  # k = "ctrlright"
-  # pyautogui.keyDown(k, _pause=False)
-  # pyautogui.keyUp(k, _pause=False)
-    # print("{} ".format(k), end = "")
-
-
-
-
   f = open(log_filename, "r")
  
   lines = []
@@ -298,7 +265,7 @@ def execute_log(log_filename):
   for line in lines:
     l = line.split()
     actual_rt = float(l[len(l) - 1])
-    rt = time.time() - t
+    rt = time.time() - t - 0.1
     if actual_rt > rt: time.sleep(actual_rt - rt)
 
     if l[0] == "POS":
@@ -319,11 +286,22 @@ def execute_log(log_filename):
       pyautogui.keyUp(l[1])
 
 
-events = Events()
-events.listen()
-# execute_log("junk.txt")
-events.join()
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(description="Collect mouse/keyboard events")
 
+  parser.add_argument("--save_log", "-s", type=str, default = "", help="log file name")
+  parser.add_argument("--load_log", "-l", type=str, default = "", help="log file name")
+  parser.add_argument("--no_listener", "-n", action='store_true', help="Do not monitor events")
+  args = parser.parse_args()
+
+
+  if not args.no_listener: 
+    events = Events(args.save_log)
+    events.listen()
+
+  if args.load_log != "": execute_log(args.load_log)
+  
+  if not args.no_listener: events.join()
 
 
 

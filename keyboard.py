@@ -15,6 +15,7 @@ import socket
 
 
 
+# This is a worker getting keyboard and mouse events data from events.py
 class Worker(QObject):
   finished = pyqtSignal()
   progress = pyqtSignal(bytes)
@@ -23,13 +24,6 @@ class Worker(QObject):
 
     host = '127.0.0.1'
     port = 12001
-
-    # create the server 
-    # serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # serv.bind((host, port))
-    # serv.listen()
-    # conn, addr = serv.accept()
-
     
     done = True
     while done:
@@ -52,7 +46,7 @@ class Worker(QObject):
     
  
 
-
+# a virtual keyboard 
 class Keyboard:
   def __init__(self):
     self.key_names = [
@@ -73,16 +67,21 @@ class Keyboard:
       ['fn', 'ctrl', 'alt', 'command', 'space', 'command_r', 'alt_r', 'left', 'up', 'down', 'right']
     ]
 
+    # app
     self.app = QApplication([])
+
+    # main window 
     self.window = QWidget()
     self.window.setWindowTitle("Keyboard")
     self.window.setGeometry(100, 100, 1060, 600)
     self.window.setStyleSheet("background-color:silver")
+
+    # keyboard button
     self.buttons = {}
 
 
 
-  def getUpdate(self):
+  def run_worker(self):
    
     self.thread = QThread()
     self.worker = Worker()
@@ -93,14 +92,14 @@ class Keyboard:
     self.worker.finished.connect(self.thread.quit)
     self.worker.finished.connect(self.worker.deleteLater)
     self.thread.finished.connect(self.thread.deleteLater)
-    self.worker.progress.connect(self.reportProgress)
+    self.worker.progress.connect(self.getUpdate)
     self.thread.start()
 
     self.thread.finished.connect(
       lambda: self.window.close()
     )
 
-  def reportProgress(self, b):
+  def getUpdate(self, b):
     s = b.decode('utf-8').split('-')
     i = 0
     while (i < len(s)):
@@ -203,14 +202,15 @@ class Keyboard:
     self.click.resize(400, 20)
     self.click.setStyleSheet("font-size:15px")
     self.click.move(x, y)
-    self.getUpdate()
+    self.run_worker()
 
     self.window.show()
     sys.exit(self.app.exec_())
 
 
-keyboard = Keyboard()
-keyboard.display()
+if __name__ == '__main__':
+  keyboard = Keyboard()
+  keyboard.display()
 
 
 

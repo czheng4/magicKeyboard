@@ -12,11 +12,22 @@ this file to repeat the activity.
 UNIX> pip install -r requirements.txt
 ```
 
+# Monitor the mouse and keyboard events
+We can save the activity by running the following. Press "CTRL" + "ESC" to stop the program.
+```
+UNIX> python events.py -s my_events.txt
+```
+
+Repeat the activity by running 
+```
+UNIX> python events.py -l my_events.txt
+```
+
 # Run the virtual keyboard
 
-The following commands launch the virtual keyboard.
+If you wanna see what key is being pressed. Launch the virtual keyboard by doing the following. `keyboard.py` communicates with `events.py` through socket.
 ```
-UNIX> (python keyboard.py &); (python events.py &)
+UNIX> python keyboard.py
 ```
 
 
